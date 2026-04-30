@@ -1,0 +1,13 @@
+{
+  "name": "leave-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack Leave Management System",
+  "scripts": {
+    "dev": "concurrently \"cd server && node server.js\" \"cd client && npm run dev\"",
+    "server": "cd server && node server.js",
+    "client": "cd client && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
