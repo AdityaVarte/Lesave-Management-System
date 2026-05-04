@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAppStore } from './store/useAppStore';
 import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 import Toast from './components/Toast';
 
 // Pages
@@ -43,16 +44,24 @@ const AdminGuard = ({ children }) => {
 // Layout Component for Protected Routes
 const Layout = ({ children }) => {
   const location = useLocation();
-  
+
   return (
-    <div className="flex min-h-screen bg-primary">
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0c0b08' }}>
       <Sidebar />
-      <main 
-        className="flex-1 pt-16 lg:pt-0 min-h-screen relative"
-        style={{ marginLeft: 'calc(var(--sidebar-width) * var(--is-lg))' }}
+      {/* Topbar only on large screens (sidebar visible) */}
+      <div className="hidden lg:block">
+        <Topbar />
+      </div>
+      <main
+        style={{
+          flex: 1,
+          marginLeft: 'calc(var(--sidebar-width) * var(--is-lg))',
+          paddingTop: 'calc(var(--topbar-height) * var(--is-lg) + 56px * (1 - var(--is-lg)))',
+          minHeight: '100vh',
+          position: 'relative',
+        }}
       >
-        {/* Page Transition Wrapper */}
-        <div key={location.pathname} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div key={location.pathname} className="fade-in">
           {children}
         </div>
       </main>

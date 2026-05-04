@@ -1,30 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  BarChart2, 
-  Download, 
-  Search, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight,
-  XCircle,
-  RefreshCw
+import {
+  Download, XCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { getLeaves } from '../api/leaveApi';
 import { exportToCSV } from '../utils/csvExport';
 import LeaveTable from '../components/LeaveTable';
 
+const labelStyle = {
+  display: 'block', fontSize: '10px', fontWeight: 700,
+  color: '#5a5248', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px',
+};
+
 export default function LeaveReport() {
   const [data, setData] = useState({ leaves: [], total: 0, totalPages: 1 });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState({
-    status: '',
-    type: '',
-    department: '',
-    month: '',
-  });
-  
+  const [filters, setFilters] = useState({ status: '', type: '', department: '', month: '' });
+
   const { user, addToast } = useAppStore();
   const isAdmin = user.role === 'admin';
 
@@ -33,16 +26,14 @@ export default function LeaveReport() {
     try {
       const response = await getLeaves({ ...filters, page, limit: 10 });
       setData(response.data);
-    } catch (err) {
+    } catch {
       addToast('Failed to load report data', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchLeaves();
-  }, [page, filters]);
+  useEffect(() => { fetchLeaves(); }, [page, filters]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -50,10 +41,7 @@ export default function LeaveReport() {
     setPage(1);
   };
 
-  const clearFilters = () => {
-    setFilters({ status: '', type: '', department: '', month: '' });
-    setPage(1);
-  };
+  const clearFilters = () => { setFilters({ status: '', type: '', department: '', month: '' }); setPage(1); };
 
   const handleExport = () => {
     exportToCSV(data.leaves, 'Leave_Flow_Report');
@@ -61,15 +49,17 @@ export default function LeaveReport() {
   };
 
   return (
-    <div className="p-8 space-y-8 fade-in">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="fade-in" style={{ padding: '36px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <h2 className="font-display text-4xl font-bold text-ink-primary">Leave Report</h2>
-          <p className="text-ink-muted text-sm mt-1">Detailed analysis and records</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '38px', fontWeight: 700, color: '#f5f0e8', lineHeight: 1 }}>Leave Report</h2>
+          <p style={{ color: '#9a9080', fontSize: '13px', marginTop: '6px' }}>Detailed analysis and workforce records</p>
         </div>
-        <button 
+        <button
           onClick={handleExport}
-          className="btn-gold flex items-center gap-2 px-6"
+          className="btn-gold"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}
           disabled={data.leaves.length === 0}
         >
           <Download size={18} /> Export CSV
@@ -77,10 +67,10 @@ export default function LeaveReport() {
       </div>
 
       {/* Filters Card */}
-      <div className="card p-6 border-gold-dim/30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Status</label>
+      <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px', alignItems: 'flex-end' }}>
+          <div>
+            <label style={labelStyle}>Status</label>
             <select name="status" value={filters.status} onChange={handleFilterChange}>
               <option value="">All Statuses</option>
               <option value="Pending">Pending</option>
@@ -89,8 +79,8 @@ export default function LeaveReport() {
             </select>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Type</label>
+          <div>
+            <label style={labelStyle}>Type</label>
             <select name="type" value={filters.type} onChange={handleFilterChange}>
               <option value="">All Types</option>
               <option value="Casual">Casual</option>
@@ -100,86 +90,75 @@ export default function LeaveReport() {
           </div>
 
           {isAdmin && (
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Department</label>
+            <div>
+              <label style={labelStyle}>Department</label>
               <select name="department" value={filters.department} onChange={handleFilterChange}>
                 <option value="">All Departments</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Design">Design</option>
-                <option value="Finance">Finance</option>
-                <option value="HR">HR</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Operations">Operations</option>
+                {['Engineering', 'Design', 'Finance', 'HR', 'Marketing', 'Operations'].map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Month</label>
-            <input 
-              type="month" 
-              name="month" 
-              value={filters.month} 
-              onChange={handleFilterChange} 
-            />
+          <div>
+            <label style={labelStyle}>Month</label>
+            <input type="month" name="month" value={filters.month} onChange={handleFilterChange} />
           </div>
 
-          <div className="flex items-end">
-            <button 
-              onClick={clearFilters}
-              className="btn-ghost w-full flex items-center justify-center gap-2 py-[11px]"
-            >
-              <XCircle size={16} /> Reset Filters
-            </button>
-          </div>
+          <button onClick={clearFilters} className="btn-ghost" style={{ height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <XCircle size={16} /> Reset
+          </button>
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="card glow-gold">
-        <div className="p-0">
-          <LeaveTable 
-            leaves={data.leaves} 
-            loading={loading}
-            showEmployee={isAdmin}
-          />
-        </div>
+      {/* Table Card */}
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <LeaveTable leaves={data.leaves} loading={loading} showEmployee={isAdmin} />
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between">
-          <p className="text-xs text-ink-hint font-medium">
-            Showing <span className="text-ink-primary">{(page - 1) * 10 + 1}</span> to <span className="text-ink-primary">{Math.min(page * 10, data.total)}</span> of <span className="text-ink-primary">{data.total}</span> records
+        <div style={{ padding: '20px 24px', borderTop: '1px solid #1a1610', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ fontSize: '12px', color: '#5a5248', fontWeight: 500 }}>
+            Showing <span style={{ color: '#f5f0e8' }}>{(page - 1) * 10 + 1}</span> to <span style={{ color: '#f5f0e8' }}>{Math.min(page * 10, data.total)}</span> of <span style={{ color: '#f5f0e8' }}>{data.total}</span> records
           </p>
-          <div className="flex items-center gap-2">
-            <button 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
               disabled={page === 1 || loading}
               onClick={() => setPage(p => p - 1)}
-              className="p-2 rounded-lg border border-border text-ink-muted hover:text-gold hover:border-gold disabled:opacity-30 disabled:pointer-events-none transition-all"
+              style={{
+                width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #231e12', background: 'none', color: '#9a9080',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.3 : 1, transition: 'all 0.15s'
+              }}
+              onMouseEnter={e => { if (page !== 1) e.currentTarget.style.borderColor = '#c9a84c'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#231e12'; }}
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
-            <div className="flex items-center gap-1">
+            <div style={{ display: 'flex', gap: '6px' }}>
               {[...Array(data.totalPages)].map((_, i) => (
                 <button
                   key={i + 1}
                   onClick={() => setPage(i + 1)}
-                  className={`
-                    w-8 h-8 rounded-lg text-xs font-bold transition-all
-                    ${page === i + 1 
-                      ? 'bg-gold text-primary shadow-[0_0_15px_rgba(201,168,76,0.3)]' 
-                      : 'text-ink-muted hover:text-gold hover:bg-gold-dim/10'}
-                  `}
+                  style={{
+                    width: '36px', height: '36px', borderRadius: '8px', border: 'none',
+                    background: page === i + 1 ? '#c9a84c' : 'rgba(255,255,255,0.03)',
+                    color: page === i + 1 ? '#0c0b08' : '#9a9080',
+                    fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s'
+                  }}
                 >
                   {i + 1}
                 </button>
               ))}
             </div>
-            <button 
+            <button
               disabled={page === data.totalPages || loading}
               onClick={() => setPage(p => p + 1)}
-              className="p-2 rounded-lg border border-border text-ink-muted hover:text-gold hover:border-gold disabled:opacity-30 disabled:pointer-events-none transition-all"
+              style={{
+                width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #231e12', background: 'none', color: '#9a9080',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: page === data.totalPages ? 'default' : 'pointer', opacity: page === data.totalPages ? 0.3 : 1, transition: 'all 0.15s'
+              }}
+              onMouseEnter={e => { if (page !== data.totalPages) e.currentTarget.style.borderColor = '#c9a84c'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#231e12'; }}
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

@@ -40,20 +40,25 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-      {/* Decorative Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold/5 blur-[120px] rounded-full" />
+    <div style={{ minHeight: '100vh', background: '#0c0b08', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
+      {/* Decorative glow orbs */}
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '45%', height: '45%', background: 'radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)', filter: 'blur(60px)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-15%', right: '-10%', width: '45%', height: '45%', background: 'radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%)', filter: 'blur(60px)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(201,168,76,0.02) 0%, transparent 70%)', filter: 'blur(80px)', borderRadius: '50%' }} />
       </div>
 
-      <div className="w-full max-w-[400px] z-10">
-        <div className="text-center mb-10">
-          <h1 className="font-display text-6xl font-bold text-gold tracking-tight mb-2">LeaveFlow</h1>
-          <p className="text-ink-muted text-sm tracking-widest uppercase">Workforce Leave Intelligence</p>
+      <div style={{ width: '100%', maxWidth: '400px', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '58px', fontWeight: 700, background: 'linear-gradient(135deg, #c9a84c, #f0c060)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '8px' }}>
+            LeaveFlow
+          </h1>
+          <p style={{ color: '#5a5248', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600 }}>
+            Workforce Leave Intelligence
+          </p>
         </div>
 
-        <div className="card p-8 glow-gold">
+        <div className="card card-gold-top" style={{ padding: '32px', boxShadow: '0 0 0 1px #231e12, 0 24px 80px rgba(0,0,0,0.6), 0 0 60px rgba(201,168,76,0.05)' }}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
               <div className="bg-rejected/10 border border-rejected/20 p-3 rounded-lg text-rejected text-sm text-center">

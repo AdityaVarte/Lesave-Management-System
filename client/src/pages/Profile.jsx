@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Shield, 
-  Building2, 
-  Save, 
-  KeyRound,
-  Loader2,
-  CalendarCheck
+import {
+  User, Mail, Lock, Shield, Building2, Save, KeyRound, Loader2, CalendarCheck
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,184 +17,170 @@ const passwordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(6, 'New password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your new password'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+}).refine((d) => d.newPassword === d.confirmPassword, {
+  message: "Passwords don't match", path: ['confirmPassword'],
 });
+
+/* ── Shared label style ──────────────────────────────── */
+const labelStyle = {
+  display: 'block',
+  fontSize: '10px', fontWeight: 700,
+  color: '#5a5248',
+  textTransform: 'uppercase',
+  letterSpacing: '0.12em',
+  marginBottom: '6px',
+};
+const errStyle = { fontSize: '10px', color: '#e06060', fontWeight: 700, textTransform: 'uppercase', marginTop: '4px' };
 
 export default function Profile() {
   const { user, setUser, addToast } = useAppStore();
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  const profileForm = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-    }
-  });
-
-  const passwordForm = useForm({
-    resolver: zodResolver(passwordSchema),
-  });
+  const pf = useForm({ resolver: zodResolver(profileSchema), defaultValues: { name: user?.name || '', email: user?.email || '' } });
+  const pwf = useForm({ resolver: zodResolver(passwordSchema) });
 
   const onProfileSubmit = async (data) => {
     setProfileLoading(true);
-    try {
-      const response = await updateProfile(data);
-      setUser(response.data);
-      addToast('Profile updated successfully', 'success');
-    } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to update profile', 'error');
-    } finally {
-      setProfileLoading(false);
-    }
+    try { const r = await updateProfile(data); setUser(r.data); addToast('Profile updated', 'success'); }
+    catch (err) { addToast(err.response?.data?.message || 'Failed to update profile', 'error'); }
+    finally { setProfileLoading(false); }
   };
 
   const onPasswordSubmit = async (data) => {
     setPasswordLoading(true);
-    try {
-      await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword
-      });
-      addToast('Password changed successfully', 'success');
-      passwordForm.reset();
-    } catch (err) {
-      addToast(err.response?.data?.message || 'Failed to change password', 'error');
-    } finally {
-      setPasswordLoading(false);
-    }
+    try { await changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword }); addToast('Password changed', 'success'); pwf.reset(); }
+    catch (err) { addToast(err.response?.data?.message || 'Failed to change password', 'error'); }
+    finally { setPasswordLoading(false); }
   };
 
   return (
-    <div className="p-8 space-y-8 fade-in">
-      <div>
-        <h2 className="font-display text-4xl font-bold text-ink-primary">Account Settings</h2>
-        <p className="text-ink-muted text-sm mt-1">Manage your profile and security preferences</p>
+    <div className="fade-in" style={{ padding: '36px', maxWidth: '1200px' }}>
+      {/* Page header */}
+      <div style={{ marginBottom: '32px' }}>
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '38px', fontWeight: 700, color: '#f5f0e8', lineHeight: 1.1 }}>
+          Account Settings
+        </h2>
+        <p style={{ fontSize: '13px', color: '#9a9080', marginTop: '4px' }}>
+          Manage your profile and security preferences
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Col: Info Summary */}
-        <div className="space-y-6">
-          <div className="card p-8 text-center flex flex-col items-center glow-gold">
-            <div className="w-24 h-24 rounded-full bg-gold-dim border-2 border-gold/30 flex items-center justify-center text-gold font-bold text-4xl mb-4 shadow-[0_0_30px_rgba(201,168,76,0.15)]">
-              {user?.name?.charAt(0)}
-            </div>
-            <h3 className="text-xl font-bold text-ink-primary">{user?.name}</h3>
-            <p className="text-sm text-ink-muted mb-6">{user?.email}</p>
-            
-            <div className="w-full space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-primary-surface rounded-xl border border-border">
-                <Building2 size={18} className="text-gold" />
-                <div className="text-left">
-                  <p className="text-[10px] font-bold text-ink-hint uppercase tracking-widest">Department</p>
-                  <p className="text-sm font-medium text-ink-primary">{user?.department}</p>
+      {/* 3-col grid: 1 left info card + 2 right forms */}
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px', alignItems: 'start' }}>
+
+        {/* ── Left: Profile Card ── */}
+        <div className="card card-gold-top" style={{ padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          {/* Avatar */}
+          <div style={{
+            width: '88px', height: '88px', borderRadius: '50%',
+            background: 'rgba(201,168,76,0.1)',
+            border: '2px solid rgba(201,168,76,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: '40px', fontWeight: 700, color: '#c9a84c',
+            boxShadow: '0 0 30px rgba(201,168,76,0.12)',
+          }}>
+            {user?.name?.charAt(0)}
+          </div>
+
+          {/* Name & email */}
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f5f0e8', marginBottom: '2px' }}>{user?.name}</h3>
+            <p style={{ fontSize: '12px', color: '#9a9080' }}>{user?.email}</p>
+          </div>
+
+          {/* Info rows */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+            {[
+              { icon: Building2,    label: 'Department',        value: user?.department },
+              { icon: Shield,       label: 'Access Level',      value: user?.role?.toUpperCase() },
+              { icon: CalendarCheck,label: 'Annual Leave Quota',value: `${user?.total_leaves} Days` },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 12px', borderRadius: '8px',
+                background: '#1c1810', border: '1px solid #231e12',
+              }}>
+                <Icon size={16} color="#c9a84c" style={{ flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: '9px', fontWeight: 700, color: '#5a5248', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{label}</p>
+                  <p style={{ fontSize: '13px', fontWeight: 500, color: '#f5f0e8', marginTop: '1px' }}>{value}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-primary-surface rounded-xl border border-border">
-                <Shield size={18} className="text-gold" />
-                <div className="text-left">
-                  <p className="text-[10px] font-bold text-ink-hint uppercase tracking-widest">Access Level</p>
-                  <p className="text-sm font-medium text-ink-primary uppercase tracking-tighter">{user?.role}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-primary-surface rounded-xl border border-border">
-                <CalendarCheck size={18} className="text-gold" />
-                <div className="text-left">
-                  <p className="text-[10px] font-bold text-ink-hint uppercase tracking-widest">Annual Leave Quota</p>
-                  <p className="text-sm font-medium text-ink-primary">{user?.total_leaves} Days</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Right Col: Forms */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Profile Form */}
-          <div className="card p-8">
-            <div className="flex items-center gap-2 mb-8">
-              <User size={20} className="text-gold" />
-              <h3 className="text-lg font-bold text-ink-primary">Personal Information</h3>
+        {/* ── Right: Forms ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Personal Info */}
+          <div className="card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #1a1610' }}>
+              <User size={17} color="#c9a84c" />
+              <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#f5f0e8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+                Personal Information
+              </h3>
             </div>
-            
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Full Name</label>
-                  <input {...profileForm.register('name')} placeholder="Your name" />
-                  {profileForm.formState.errors.name && (
-                    <p className="text-rejected text-[10px] font-bold uppercase">{profileForm.formState.errors.name.message}</p>
-                  )}
+            <form onSubmit={pf.handleSubmit(onProfileSubmit)}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={labelStyle}>Full Name</label>
+                  <input {...pf.register('name')} placeholder="Your name" />
+                  {pf.formState.errors.name && <p style={errStyle}>{pf.formState.errors.name.message}</p>}
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-hint" size={16} />
-                    <input {...profileForm.register('email')} className="pl-10" placeholder="your@email.com" />
+                <div>
+                  <label style={labelStyle}>Email Address</label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#5a5248' }} />
+                    <input {...pf.register('email')} style={{ paddingLeft: '36px' }} placeholder="your@email.com" />
                   </div>
-                  {profileForm.formState.errors.email && (
-                    <p className="text-rejected text-[10px] font-bold uppercase">{profileForm.formState.errors.email.message}</p>
-                  )}
+                  {pf.formState.errors.email && <p style={errStyle}>{pf.formState.errors.email.message}</p>}
                 </div>
               </div>
-              <div className="flex justify-end">
-                <button 
-                  type="submit" 
-                  className="btn-gold flex items-center gap-2 px-8"
-                  disabled={profileLoading}
-                >
-                  {profileLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn-gold" disabled={profileLoading} style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                  {profileLoading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                   Save Changes
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Password Form */}
-          <div className="card p-8">
-            <div className="flex items-center gap-2 mb-8">
-              <Lock size={20} className="text-gold" />
-              <h3 className="text-lg font-bold text-ink-primary">Security & Password</h3>
+          {/* Security */}
+          <div className="card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #1a1610' }}>
+              <Lock size={17} color="#c9a84c" />
+              <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#f5f0e8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+                Security &amp; Password
+              </h3>
             </div>
-            
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-              <div className="space-y-1.5 max-w-md">
-                <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Current Password</label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-hint" size={16} />
-                  <input type="password" {...passwordForm.register('currentPassword')} className="pl-10" placeholder="••••••••" />
+            <form onSubmit={pwf.handleSubmit(onPasswordSubmit)}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={labelStyle}>Current Password</label>
+                <div style={{ position: 'relative', maxWidth: '380px' }}>
+                  <KeyRound size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#5a5248' }} />
+                  <input type="password" {...pwf.register('currentPassword')} style={{ paddingLeft: '36px' }} placeholder="••••••••" />
                 </div>
-                {passwordForm.formState.errors.currentPassword && (
-                  <p className="text-rejected text-[10px] font-bold uppercase">{passwordForm.formState.errors.currentPassword.message}</p>
-                )}
+                {pwf.formState.errors.currentPassword && <p style={errStyle}>{pwf.formState.errors.currentPassword.message}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">New Password</label>
-                  <input type="password" {...passwordForm.register('newPassword')} placeholder="••••••••" />
-                  {passwordForm.formState.errors.newPassword && (
-                    <p className="text-rejected text-[10px] font-bold uppercase">{passwordForm.formState.errors.newPassword.message}</p>
-                  )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={labelStyle}>New Password</label>
+                  <input type="password" {...pwf.register('newPassword')} placeholder="••••••••" />
+                  {pwf.formState.errors.newPassword && <p style={errStyle}>{pwf.formState.errors.newPassword.message}</p>}
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Confirm New Password</label>
-                  <input type="password" {...passwordForm.register('confirmPassword')} placeholder="••••••••" />
-                  {passwordForm.formState.errors.confirmPassword && (
-                    <p className="text-rejected text-[10px] font-bold uppercase">{passwordForm.formState.errors.confirmPassword.message}</p>
-                  )}
+                <div>
+                  <label style={labelStyle}>Confirm New Password</label>
+                  <input type="password" {...pwf.register('confirmPassword')} placeholder="••••••••" />
+                  {pwf.formState.errors.confirmPassword && <p style={errStyle}>{pwf.formState.errors.confirmPassword.message}</p>}
                 </div>
               </div>
-              <div className="flex justify-end">
-                <button 
-                  type="submit" 
-                  className="btn-gold flex items-center gap-2 px-8"
-                  disabled={passwordLoading}
-                >
-                  {passwordLoading ? <Loader2 size={18} className="animate-spin" /> : <Lock size={18} />}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn-gold" disabled={passwordLoading} style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                  {passwordLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                   Update Password
                 </button>
               </div>

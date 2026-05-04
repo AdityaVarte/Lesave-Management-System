@@ -1,40 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Settings2, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Loader2,
-  Palette,
-  CalendarDays
+import {
+  Plus, Settings2, Pencil, Trash2, ShieldCheck, Clock, Calendar, CheckCircle2, ChevronRight
 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useAppStore } from '../store/useAppStore';
-import { 
-  getLeaveTypes, 
-  createLeaveType, 
-  updateLeaveType, 
-  deleteLeaveType 
-} from '../api/leaveTypeApi';
+import { getLeaveTypes, createLeaveType, updateLeaveType, deleteLeaveType } from '../api/leaveTypeApi';
 import SlidePanel from '../components/SlidePanel';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const schema = z.object({
-  type_name: z.string().min(2, 'Name is required'),
-  max_days_per_request: z.number().min(1).max(60).default(10),
-  color: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color'),
-});
-
-const PRESET_COLORS = [
-  '#E4B84D', // Gold
-  '#E07070', // Red
-  '#70C090', // Green
-  '#7090C0', // Blue
-  '#C070C0', // Purple
-  '#C09070', // Orange
-];
+const labelStyle = {
+  display: 'block', fontSize: '10px', fontWeight: 700,
+  color: '#5a5248', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px',
+};
 
 export default function LeaveTypes() {
   const [types, setTypes] = useState([]);
@@ -42,64 +18,46 @@ export default function LeaveTypes() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const [formData, setFormData] = useState({ type_name: '', total_days: 20, description: '', color: '#c9a84c' });
 
   const { addToast } = useAppStore();
-
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: { max_days_per_request: 10, color: '#E4B84D' }
-  });
-
-  const selectedColor = watch('color');
 
   const fetchTypes = async () => {
     setLoading(true);
     try {
-      const response = await getLeaveTypes();
-      setTypes(response.data);
-    } catch (err) {
-      addToast('Failed to load leave types', 'error');
+      const r = await getLeaveTypes();
+      setTypes(r.data);
+    } catch {
+      addToast('Failed to load leave policies', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchTypes();
-  }, []);
+  useEffect(() => { fetchTypes(); }, []);
 
   const openPanel = (type = null) => {
     setEditingType(type);
-    if (type) {
-      reset({
-        type_name: type.type_name,
-        max_days_per_request: type.max_days_per_request,
-        color: type.color,
-      });
-    } else {
-      reset({ max_days_per_request: 10, color: '#E4B84D' });
-    }
+    if (type) setFormData({ type_name: type.type_name, total_days: type.total_days, description: type.description || '', color: type.color || '#c9a84c' });
+    else setFormData({ type_name: '', total_days: 20, description: '', color: '#c9a84c' });
     setPanelOpen(true);
   };
 
-  const onSubmit = async (data) => {
-    setSubmitLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       if (editingType) {
-        const response = await updateLeaveType(editingType._id, data);
-        setTypes(types.map(t => t._id === editingType._id ? response.data : t));
-        addToast('Leave type updated', 'success');
+        const r = await updateLeaveType(editingType._id, formData);
+        setTypes(types.map(t => t._id === editingType._id ? r.data : t));
+        addToast('Policy updated', 'success');
       } else {
-        const response = await createLeaveType(data);
-        setTypes([...types, response.data]);
-        addToast('Leave type created', 'success');
+        const r = await createLeaveType(formData);
+        setTypes([...types, r.data]);
+        addToast('Policy created', 'success');
       }
       setPanelOpen(false);
     } catch (err) {
-      addToast(err.response?.data?.message || 'Operation failed', 'error');
-    } finally {
-      setSubmitLoading(false);
+      addToast(err.response?.data?.message || 'Action failed', 'error');
     }
   };
 
@@ -107,7 +65,7 @@ export default function LeaveTypes() {
     try {
       await deleteLeaveType(deleteId);
       setTypes(types.filter(t => t._id !== deleteId));
-      addToast('Leave type removed', 'success');
+      addToast('Policy removed', 'success');
     } catch (err) {
       addToast(err.response?.data?.message || 'Deletion failed', 'error');
     } finally {
@@ -116,135 +74,110 @@ export default function LeaveTypes() {
   };
 
   return (
-    <div className="p-8 space-y-8 fade-in">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="fade-in" style={{ padding: '36px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <h2 className="font-display text-4xl font-bold text-ink-primary">Leave Policy</h2>
-          <p className="text-ink-muted text-sm mt-1">Configure available leave categories and restrictions</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '38px', fontWeight: 700, color: '#f5f0e8', lineHeight: 1 }}>Leave Policy</h2>
+          <p style={{ color: '#9a9080', fontSize: '13px', marginTop: '6px' }}>Configure available leave categories and restrictions</p>
         </div>
-        <button 
-          onClick={() => openPanel()}
-          className="btn-gold flex items-center gap-2 px-6"
-        >
+        <button onClick={() => openPanel()} className="btn-gold" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
           <Plus size={18} /> New Category
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
         {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card p-6 h-48 skeleton" />
-          ))
+          Array.from({ length: 3 }).map((_, i) => <div key={i} className="card skeleton" style={{ height: '220px' }} />)
         ) : types.map((type) => (
-          <div key={type._id} className="card p-6 group hover:glow-gold transition-all">
-            <div className="flex justify-between items-start mb-6">
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-primary-card shadow-lg"
-                style={{ backgroundColor: type.color }}
-              >
-                <CalendarDays size={24} />
+          <div key={type._id} className="card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '4px', height: '32px', background: type.color, borderRadius: '4px' }} />
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f5f0e8', fontFamily: "'DM Sans', sans-serif" }}>{type.type_name}</h3>
+                  <p style={{ fontSize: '11px', color: '#5a5248', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.08em', marginTop: '2px' }}>Standard Category</p>
+                </div>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => openPanel(type)}
-                  className="p-2 text-ink-hint hover:text-gold hover:bg-gold-dim/10 rounded-lg"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button 
-                  onClick={() => setDeleteId(type._id)}
-                  className="p-2 text-ink-hint hover:text-rejected hover:bg-rejected/10 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button onClick={() => openPanel(type)} className="btn-ghost" style={{ padding: '8px' }}><Pencil size={15} /></button>
+                <button onClick={() => setDeleteId(type._id)} className="btn-ghost" style={{ padding: '8px', color: '#5a5248' }} onMouseEnter={e => e.currentTarget.style.color = '#e06060'} onMouseLeave={e => e.currentTarget.style.color = '#5a5248'}><Trash2 size={15} /></button>
               </div>
-            </div>
-            
-            <h3 className="text-xl font-bold text-ink-primary mb-1">{type.type_name} Leave</h3>
-            <div className="flex items-center gap-2 text-ink-muted text-sm">
-              <Settings2 size={14} className="text-gold/60" />
-              <span>Max {type.max_days_per_request} days per request</span>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-border/50">
-              <div className="h-1.5 w-full bg-primary-surface rounded-full overflow-hidden">
-                <div 
-                  className="h-full opacity-60" 
-                  style={{ backgroundColor: type.color, width: '100%' }}
-                />
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontSize: '12px', color: '#9a9080' }}>Annual Allowance</span>
+                <span style={{ fontSize: '18px', fontWeight: 700, color: type.color, fontFamily: "'Cormorant Garamond', serif" }}>{type.total_days} Days</span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: '60%', height: '100%', background: type.color, opacity: 0.6 }} />
+              </div>
+            </div>
+
+            <p style={{ fontSize: '13px', color: '#9a9080', lineHeight: 1.5, flex: 1 }}>{type.description || 'No description provided for this leave category.'}</p>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '16px', borderTop: '1px solid #1a1610' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#5a5248', fontWeight: 700, textTransform: 'uppercase' }}>
+                <ShieldCheck size={13} color="#5CBF8A" /> Active
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#5a5248', fontWeight: 700, textTransform: 'uppercase' }}>
+                <Clock size={13} color="#c9a84c" /> Carry Forward
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <SlidePanel 
-        isOpen={panelOpen} 
-        onClose={() => setPanelOpen(false)} 
-        title={editingType ? 'Edit Leave Category' : 'New Leave Category'}
-      >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Category Name</label>
-              <input {...register('type_name')} placeholder="e.g. Sabbatical, Bereavement" />
-              {errors.type_name && <p className="text-rejected text-[10px] font-bold uppercase">{errors.type_name.message}</p>}
-            </div>
+      {/* Slide Panel */}
+      <SlidePanel isOpen={panelOpen} onClose={() => setPanelOpen(false)} title={editingType ? 'Edit Leave Category' : 'Create New Category'}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={labelStyle}>Category Name</label>
+            <input value={formData.type_name} onChange={e => setFormData({ ...formData, type_name: e.target.value })} placeholder="e.g. Wellness Leave" required />
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Max Days Per Request</label>
-              <input 
-                type="number" 
-                {...register('max_days_per_request', { valueAsNumber: true })} 
-              />
-              {errors.max_days_per_request && <p className="text-rejected text-[10px] font-bold uppercase">{errors.max_days_per_request.message}</p>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Annual Days</label>
+              <input type="number" value={formData.total_days} onChange={e => setFormData({ ...formData, total_days: parseInt(e.target.value) })} min={1} required />
             </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Visual Color Tag</label>
-              <div className="flex flex-wrap gap-3">
-                {PRESET_COLORS.map((c) => (
+            <div>
+              <label style={labelStyle}>Theme Color</label>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                {['#c9a84c', '#e06060', '#5cbf8a', '#60a5fa', '#a78bfa'].map(c => (
                   <button
-                    key={c}
-                    type="button"
-                    onClick={() => setValue('color', c)}
-                    className={`
-                      w-10 h-10 rounded-full border-2 transition-all
-                      ${selectedColor === c ? 'border-gold scale-110 shadow-lg' : 'border-transparent hover:scale-105'}
-                    `}
-                    style={{ backgroundColor: c }}
+                    key={c} type="button"
+                    onClick={() => setFormData({ ...formData, color: c })}
+                    style={{
+                      width: '28px', height: '28px', borderRadius: '50%', background: c, border: formData.color === c ? '2px solid #f5f0e8' : 'none', cursor: 'pointer', transition: 'transform 0.1s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                   />
                 ))}
-                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-border flex items-center justify-center">
-                  <Palette size={16} className="text-ink-hint absolute pointer-events-none" />
-                  <input 
-                    type="color" 
-                    {...register('color')}
-                    className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer opacity-0"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-primary-surface rounded-xl border border-border">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: selectedColor }} />
-                <span className="text-xs font-mono text-ink-primary">{selectedColor}</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-border flex gap-3">
-            <button type="button" className="btn-ghost flex-1" onClick={() => setPanelOpen(false)}>Cancel</button>
-            <button type="submit" className="btn-gold flex-1" disabled={submitLoading}>
-              {submitLoading ? <Loader2 className="animate-spin" /> : editingType ? 'Update' : 'Create'}
-            </button>
+          <div>
+            <label style={labelStyle}>Description</label>
+            <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Explain who can use this leave and under what conditions..." rows={4} style={{ resize: 'none' }} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px', paddingTop: '20px', borderTop: '1px solid #1a1610' }}>
+            <button type="button" className="btn-ghost" style={{ flex: 1 }} onClick={() => setPanelOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-gold" style={{ flex: 1 }}>{editingType ? 'Save Changes' : 'Create Category'}</button>
           </div>
         </form>
       </SlidePanel>
 
-      <ConfirmDialog 
+      <ConfirmDialog
         isOpen={!!deleteId}
-        title="Delete Category"
-        message="Are you sure? Existing leave requests of this type will still reference this name but may lose visual formatting."
-        confirmText="Delete Policy"
+        title="Delete Leave Category"
+        message="Are you sure you want to remove this leave category? This will not affect existing leave records but will prevent future applications."
+        confirmText="Yes, Delete"
         danger={true}
         onConfirm={handleDelete}
         onCancel={() => setDeleteId(null)}

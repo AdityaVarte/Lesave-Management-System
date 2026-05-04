@@ -1,25 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  Mail, 
-  Building2, 
-  ShieldCheck, 
-  Pencil, 
-  Trash2, 
-  Loader2,
-  AlertTriangle
+import {
+  Users, UserPlus, Search, Building2, ShieldCheck, Pencil, Trash2, Loader2, Mail
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAppStore } from '../store/useAppStore';
-import { 
-  getAllEmployees, 
-  createEmployee, 
-  updateEmployee, 
-  deleteEmployee 
+import {
+  getAllEmployees, createEmployee, updateEmployee, deleteEmployee
 } from '../api/employeeApi';
 import SlidePanel from '../components/SlidePanel';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -33,6 +21,12 @@ const schema = z.object({
   password: z.string().optional().or(z.literal('')),
 });
 
+const labelStyle = {
+  display: 'block', fontSize: '10px', fontWeight: 700,
+  color: '#5a5248', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px',
+};
+const errStyle = { fontSize: '10px', color: '#e06060', fontWeight: 700, textTransform: 'uppercase', marginTop: '4px' };
+
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +37,7 @@ export default function Employees() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { addToast } = useAppStore();
-
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { role: 'employee', total_leaves: 20 }
   });
@@ -52,29 +45,23 @@ export default function Employees() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await getAllEmployees();
-      setEmployees(response.data);
-    } catch (err) {
+      const r = await getAllEmployees();
+      setEmployees(r.data);
+    } catch {
       addToast('Failed to load employees', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  useEffect(() => { fetchEmployees(); }, []);
 
   const openPanel = (emp = null) => {
     setEditingEmp(emp);
     if (emp) {
       reset({
-        name: emp.name,
-        email: emp.email,
-        department: emp.department,
-        role: emp.role,
-        total_leaves: emp.total_leaves,
-        password: '',
+        name: emp.name, email: emp.email, department: emp.department,
+        role: emp.role, total_leaves: emp.total_leaves, password: '',
       });
     } else {
       reset({ role: 'employee', total_leaves: 20 });
@@ -86,13 +73,13 @@ export default function Employees() {
     setSubmitLoading(true);
     try {
       if (editingEmp) {
-        const response = await updateEmployee(editingEmp._id, data);
-        setEmployees(employees.map(e => e._id === editingEmp._id ? { ...e, ...response.data } : e));
+        const r = await updateEmployee(editingEmp._id, data);
+        setEmployees(employees.map(e => e._id === editingEmp._id ? { ...e, ...r.data } : e));
         addToast('Employee updated successfully', 'success');
       } else {
-        if (!data.password) return addToast('Password is required for new employees', 'warning');
-        const response = await createEmployee(data);
-        setEmployees([response.data, ...employees]);
+        if (!data.password) return addToast('Password is required', 'warning');
+        const r = await createEmployee(data);
+        setEmployees([r.data, ...employees]);
         addToast('Employee created successfully', 'success');
       }
       setPanelOpen(false);
@@ -115,40 +102,39 @@ export default function Employees() {
     }
   };
 
-  const filtered = employees.filter(e => 
+  const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="p-8 space-y-8 fade-in">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="fade-in" style={{ padding: '36px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <h2 className="font-display text-4xl font-bold text-ink-primary">Employee Management</h2>
-          <p className="text-ink-muted text-sm mt-1">Manage system users and their leave allocations</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '38px', fontWeight: 700, color: '#f5f0e8', lineHeight: 1 }}>Employee Management</h2>
+          <p style={{ color: '#9a9080', fontSize: '13px', marginTop: '6px' }}>Manage system users and their leave allocations</p>
         </div>
-        <button 
-          onClick={() => openPanel()}
-          className="btn-gold flex items-center gap-2 px-6"
-        >
+        <button onClick={() => openPanel()} className="btn-gold" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px' }}>
           <UserPlus size={18} /> Add Employee
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-hint" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search by name, email or department..." 
-          className="pl-10 h-11"
+      <div style={{ position: 'relative', maxWidth: '440px', marginBottom: '24px' }}>
+        <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#5a5248' }} />
+        <input
+          type="text"
+          placeholder="Search by name, email or department..."
+          style={{ paddingLeft: '40px', height: '44px' }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="card glow-gold overflow-hidden">
+      {/* Table Card */}
+      <div className="card" style={{ overflow: 'hidden' }}>
         <table className="data-table">
           <thead>
             <tr>
@@ -162,64 +148,62 @@ export default function Employees() {
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  <td colSpan={5} className="p-4"><div className="skeleton h-12 w-full" /></td>
-                </tr>
+                <tr key={i}><td colSpan={5} style={{ padding: '24px' }}><div className="skeleton" style={{ height: '32px', width: '100%', borderRadius: '8px' }} /></td></tr>
               ))
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={5} style={{ padding: '60px', textAlign: 'center', color: '#5a5248' }}>No employees found matching your search.</td></tr>
             ) : filtered.map((emp) => (
               <tr key={emp._id}>
                 <td>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gold-dim/20 border border-gold/20 flex items-center justify-center text-gold font-bold text-xs">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '38px', height: '38px', borderRadius: '50%',
+                      background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#c9a84c', fontWeight: 700, fontSize: '13px', fontFamily: "'Cormorant Garamond', serif"
+                    }}>
                       {emp.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-bold text-ink-primary">{emp.name}</div>
-                      <div className="text-[11px] text-ink-hint">{emp.email}</div>
+                      <div style={{ fontWeight: 600, color: '#f5f0e8', fontSize: '14px' }}>{emp.name}</div>
+                      <div style={{ fontSize: '11px', color: '#5a5248', marginTop: '1px' }}>{emp.email}</div>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <div className="flex items-center gap-1.5 text-xs text-ink-muted">
-                    <Building2 size={12} className="text-gold/60" /> {emp.department}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#9a9080', fontSize: '13px' }}>
+                    <Building2 size={13} color="#c9a84c80" /> {emp.department}
                   </div>
                 </td>
                 <td>
-                  <div className={`
-                    inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-                    ${emp.role === 'admin' ? 'bg-gold-dim text-gold border border-gold/20' : 'bg-primary-surface text-ink-muted border border-border'}
-                  `}>
-                    {emp.role === 'admin' && <ShieldCheck size={10} />} {emp.role}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '3px 10px', borderRadius: '6px',
+                    fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                    background: emp.role === 'admin' ? 'rgba(201,168,76,0.1)' : '#1c1810',
+                    color: emp.role === 'admin' ? '#c9a84c' : '#9a9080',
+                    border: emp.role === 'admin' ? '1px solid rgba(201,168,76,0.2)' : '1px solid #231e12'
+                  }}>
+                    {emp.role === 'admin' && <ShieldCheck size={11} />} {emp.role}
                   </div>
                 </td>
-                <td className="w-48">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-ink-hint mb-1.5">
-                    <span>Used: {emp.balance?.used || 0}d</span>
-                    <span className="text-gold">Rem: {emp.balance?.remaining || 0}d</span>
+                <td style={{ minWidth: '180px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                    <span style={{ color: '#5a5248' }}>Used: <span style={{ color: '#f5f0e8' }}>{emp.balance?.used || 0}d</span></span>
+                    <span style={{ color: '#c9a84c' }}>Rem: {emp.balance?.remaining || 0}d</span>
                   </div>
-                  <div className="w-full h-1.5 bg-primary-surface rounded-full overflow-hidden border border-border">
-                    <div 
-                      className="h-full bg-gold shadow-[0_0_8px_rgba(201,168,76,0.5)] transition-all duration-500" 
-                      style={{ width: `${Math.min(((emp.balance?.used || 0) / (emp.total_leaves || 20)) * 100, 100)}%` }} 
-                    />
+                  <div style={{ width: '100%', height: '5px', background: '#1c1810', borderRadius: '10px', overflow: 'hidden', border: '1px solid #231e12' }}>
+                    <div style={{
+                      height: '100%', background: '#c9a84c', borderRadius: '10px',
+                      width: `${Math.min(((emp.balance?.used || 0) / (emp.total_leaves || 20)) * 100, 100)}%`,
+                      boxShadow: '0 0 10px rgba(201,168,76,0.4)', transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)'
+                    }} />
                   </div>
                 </td>
                 <td>
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={() => openPanel(emp)}
-                      className="p-2 text-ink-hint hover:text-gold hover:bg-gold-dim/10 rounded-lg transition-all"
-                      title="Edit Employee"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteId(emp._id)}
-                      className="p-2 text-ink-hint hover:text-rejected hover:bg-rejected/10 rounded-lg transition-all"
-                      title="Delete Employee"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button onClick={() => openPanel(emp)} className="btn-ghost" style={{ padding: '8px' }} title="Edit Employee"><Pencil size={16} /></button>
+                    <button onClick={() => setDeleteId(emp._id)} className="btn-ghost" style={{ padding: '8px', color: '#5a5248' }} title="Delete Employee" onMouseEnter={e => e.currentTarget.style.color = '#e06060'} onMouseLeave={e => e.currentTarget.style.color = '#5a5248'}><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
@@ -228,91 +212,64 @@ export default function Employees() {
         </table>
       </div>
 
-      {/* Slide-in Panel */}
-      <SlidePanel 
-        isOpen={panelOpen} 
-        onClose={() => setPanelOpen(false)} 
-        title={editingEmp ? 'Edit Employee Details' : 'Onboard New Employee'}
-      >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Full Name</label>
-              <input {...register('name')} placeholder="e.g. John Doe" />
-              {errors.name && <p className="text-rejected text-[10px] uppercase font-bold">{errors.name.message}</p>}
-            </div>
+      {/* Slide Panel */}
+      <SlidePanel isOpen={panelOpen} onClose={() => setPanelOpen(false)} title={editingEmp ? 'Edit Employee Details' : 'Onboard New Employee'}>
+        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={labelStyle}>Full Name</label>
+            <input {...register('name')} placeholder="e.g. John Doe" />
+            {errors.name && <p style={errStyle}>{errors.name.message}</p>}
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-hint" size={14} />
-                <input {...register('email')} className="pl-9" placeholder="john@company.com" />
-              </div>
-              {errors.email && <p className="text-rejected text-[10px] uppercase font-bold">{errors.email.message}</p>}
+          <div>
+            <label style={labelStyle}>Email Address</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#5a5248' }} />
+              <input {...register('email')} style={{ paddingLeft: '36px' }} placeholder="john@company.com" />
             </div>
+            {errors.email && <p style={errStyle}>{errors.email.message}</p>}
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Department</label>
-                <select {...register('department')}>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Design">Design</option>
-                  <option value="Finance">Finance</option>
-                  <option value="HR">HR</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Operations">Operations</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Role</label>
-                <select {...register('role')}>
-                  <option value="employee">Employee</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={labelStyle}>Department</label>
+              <select {...register('department')}>
+                {['Engineering', 'Design', 'Finance', 'HR', 'Marketing', 'Operations'].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">Total Annual Leaves</label>
-              <input 
-                type="number" 
-                {...register('total_leaves', { valueAsNumber: true })} 
-                min={1} max={60} 
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-ink-hint uppercase tracking-widest px-1">
-                {editingEmp ? 'New Password (Optional)' : 'Initial Password'}
-              </label>
-              <input type="password" {...register('password')} placeholder="••••••••" />
-              <p className="text-[9px] text-ink-hint italic">Minimum 6 characters required.</p>
+            <div>
+              <label style={labelStyle}>Role</label>
+              <select {...register('role')}>
+                <option value="employee">Employee</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-border flex gap-3">
-            <button 
-              type="button" 
-              className="btn-ghost flex-1" 
-              onClick={() => setPanelOpen(false)}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn-gold flex-1"
-              disabled={submitLoading}
-            >
-              {submitLoading ? <Loader2 className="animate-spin" /> : editingEmp ? 'Save Changes' : 'Create Account'}
+          <div>
+            <label style={labelStyle}>Total Annual Leaves</label>
+            <input type="number" {...register('total_leaves', { valueAsNumber: true })} min={1} max={60} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>{editingEmp ? 'New Password (Optional)' : 'Initial Password'}</label>
+            <input type="password" {...register('password')} placeholder="••••••••" />
+            <p style={{ fontSize: '9px', color: '#5a5248', fontStyle: 'italic', marginTop: '4px' }}>Minimum 6 characters required.</p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '12px', paddingTop: '20px', borderTop: '1px solid #1a1610' }}>
+            <button type="button" className="btn-ghost" style={{ flex: 1 }} onClick={() => setPanelOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-gold" style={{ flex: 1 }} disabled={submitLoading}>
+              {submitLoading ? <Loader2 className="animate-spin" size={18} /> : editingEmp ? 'Save Changes' : 'Create Account'}
             </button>
           </div>
         </form>
       </SlidePanel>
 
-      <ConfirmDialog 
+      <ConfirmDialog
         isOpen={!!deleteId}
         title="Delete Employee"
-        message="Are you sure you want to remove this employee? This will permanently delete their account. This action is blocked if the employee has active leave requests."
+        message="Are you sure you want to remove this employee? This will permanently delete their account and history."
         confirmText="Yes, Delete"
         danger={true}
         onConfirm={handleDelete}

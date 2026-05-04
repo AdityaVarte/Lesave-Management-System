@@ -1,27 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Users, 
-  Clock, 
-  CheckCircle2, 
-  BarChart3, 
-  Calendar,
-  ArrowUpRight,
-  TrendingUp,
-  PieChart as PieIcon
+import {
+  Users, Clock, CheckCircle2, BarChart3, Calendar, ArrowUpRight, TrendingUp, PieChart as PieIcon, ChevronRight
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { useAppStore } from '../store/useAppStore';
 import { getDashboard, getAdminDashboard } from '../api/analyticsApi';
@@ -29,25 +11,12 @@ import MetricCard from '../components/MetricCard';
 import LeaveTable from '../components/LeaveTable';
 import { Link } from 'react-router-dom';
 
-const chartTheme = {
-  background: 'transparent',
-  gridColor: '#2A2418',
-  axisColor: '#9A9080',
-  tooltipBg: '#1A1814',
-  tooltipBorder: '#C9A84C',
-  tooltipText: '#F5F0E8',
-  barFill: '#C9A84C',
-  lineStroke: '#E4B84D',
-  lineWidth: 2,
-  dotFill: '#F0C060',
-};
-
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-primary-card border border-gold/30 p-3 rounded-lg shadow-xl">
-        <p className="text-xs font-bold text-ink-muted uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-sm font-bold text-gold">{`${payload[0].value} Days`}</p>
+      <div style={{ background: '#141209', border: '1px solid #c9a84c30', padding: '10px 14px', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+        <p style={{ fontSize: '10px', fontWeight: 700, color: '#5a5248', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>{label}</p>
+        <p style={{ fontSize: '14px', fontWeight: 700, color: '#c9a84c' }}>{`${payload[0].value} ${payload[0].name || 'Requests'}`}</p>
       </div>
     );
   }
@@ -62,8 +31,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = user.role === 'admin' 
-          ? await getAdminDashboard() 
+        const response = user.role === 'admin'
+          ? await getAdminDashboard()
           : await getDashboard();
         setData(response.data);
       } catch (err) {
@@ -77,8 +46,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="animate-spin" style={{ width: '40px', height: '40px', border: '3px solid rgba(201,168,76,0.1)', borderTopColor: '#c9a84c', borderRadius: '50%' }} />
       </div>
     );
   }
@@ -86,29 +55,31 @@ export default function Dashboard() {
   const isAdmin = user.role === 'admin';
 
   return (
-    <div className="p-8 space-y-8 fade-in">
+    <div className="fade-in" style={{ padding: '36px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
         <div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-ink-primary">Dashboard</h2>
-          <p className="text-ink-muted text-sm mt-1">Welcome back, <span className="text-gold font-medium">{user.name}</span></p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '42px', fontWeight: 700, color: '#f5f0e8', lineHeight: 1 }}>Dashboard</h2>
+          <p style={{ color: '#9a9080', fontSize: '13px', marginTop: '8px' }}>
+            Welcome back, <span style={{ color: '#c9a84c', fontWeight: 600 }}>{user.name}</span>
+          </p>
         </div>
         {!isAdmin && (
-          <Link to="/apply-leave" className="btn-gold flex items-center gap-2 w-full sm:w-auto justify-center">
+          <Link to="/apply-leave" className="btn-gold" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 24px', textDecoration: 'none' }}>
             <Calendar size={18} /> Apply for Leave
           </Link>
         )}
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      {/* Metric Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         {isAdmin ? (
           <>
             <MetricCard title="Total Employees" value={data.totalEmployees} icon={Users} color="#C9A84C" />
-            <MetricCard 
-              title="Pending Approvals" 
-              value={data.pendingCount} 
-              icon={Clock} 
+            <MetricCard
+              title="Pending Approvals"
+              value={data.pendingCount}
+              icon={Clock}
               color={data.pendingCount > 0 ? '#E4B84D' : '#9A9080'}
               glowColor={data.pendingCount > 0 ? 'rgba(228, 184, 77, 0.2)' : undefined}
             />
@@ -120,77 +91,80 @@ export default function Dashboard() {
             <MetricCard title="Total Allocated" value={`${data.balance.total}d`} icon={Calendar} color="#9A9080" />
             <MetricCard title="Used Leaves" value={`${data.balance.used}d`} icon={CheckCircle2} color="#5CBF8A" />
             <MetricCard title="Pending" value={`${data.balance.pending}d`} icon={Clock} color="#E4B84D" />
-            <MetricCard 
-              title="Remaining" 
-              value={`${data.balance.remaining}d`} 
-              icon={TrendingUp} 
-              color={data.balance.remaining < 2 ? '#E06060' : data.balance.remaining < 5 ? '#E4B84D' : '#5CBF8A'} 
+            <MetricCard
+              title="Remaining"
+              value={`${data.balance.remaining}d`}
+              icon={TrendingUp}
+              color={data.balance.remaining < 2 ? '#E06060' : data.balance.remaining < 5 ? '#E4B84D' : '#5CBF8A'}
             />
           </>
         )}
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-bold text-ink-primary uppercase tracking-widest flex items-center gap-2">
-              <BarChart3 size={16} className="text-gold" />
-              {isAdmin ? 'Department Breakdown' : 'Leave History'}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+        {/* Chart 1: Bar Chart */}
+        <div className="card" style={{ padding: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            <BarChart3 size={17} color="#c9a84c" />
+            <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#f5f0e8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+              {isAdmin ? 'Department Breakdown' : 'Leave Usage by Type'}
             </h3>
           </div>
-          <div className="h-[300px]">
+          <div style={{ height: '300px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={isAdmin ? data.topEmployees : data.monthlyHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} vertical={false} />
-                <XAxis 
-                  dataKey={isAdmin ? "department" : "_id"} 
-                  stroke={chartTheme.axisColor} 
-                  fontSize={10} 
-                  tickFormatter={(val) => isAdmin ? val : `Month ${val}`}
-                />
-                <YAxis stroke={chartTheme.axisColor} fontSize={10} />
+              <BarChart data={isAdmin ? data.departmentStats : data.typeBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#231e12" vertical={false} />
+                <XAxis dataKey={isAdmin ? "_id" : "type_name"} stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201,168,76,0.05)' }} />
-                <Bar dataKey={isAdmin ? "totalDays" : "days"} fill={chartTheme.barFill} radius={[4, 4, 0, 0]} />
+                <Bar dataKey={isAdmin ? "count" : "days"} fill="#c9a84c" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="card p-6 overflow-hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xs font-bold text-ink-primary uppercase tracking-widest flex items-center gap-2">
-              {isAdmin ? <TrendingUp size={16} className="text-gold" /> : <PieIcon size={16} className="text-gold" />}
-              {isAdmin ? 'Monthly Trend' : 'Leave Type Breakdown'}
+        {/* Chart 2: Area or Pie */}
+        <div className="card" style={{ padding: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            {isAdmin ? <TrendingUp size={17} color="#c9a84c" /> : <PieIcon size={17} color="#c9a84c" />}
+            <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#f5f0e8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+              {isAdmin ? 'Monthly Request Trend' : 'Leave Type Distribution'}
             </h3>
           </div>
-          <div className="h-[300px] w-full">
+          <div style={{ height: '300px' }}>
             <ResponsiveContainer width="100%" height="100%">
               {isAdmin ? (
-                <LineChart data={data.latestPending}>
-                   <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.gridColor} vertical={false} />
-                   <XAxis dataKey="employee_snapshot.name" stroke={chartTheme.axisColor} fontSize={10} />
-                   <YAxis stroke={chartTheme.axisColor} fontSize={10} />
-                   <Tooltip content={<CustomTooltip />} />
-                   <Line type="monotone" dataKey="working_days" stroke={chartTheme.lineStroke} strokeWidth={2} dot={{ fill: chartTheme.dotFill }} />
-                </LineChart>
+                <AreaChart data={data.monthlyStats}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#c9a84c" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#c9a84c" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#231e12" vertical={false} />
+                  <XAxis dataKey="_id" stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                  <YAxis stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="count" stroke="#c9a84c" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                </AreaChart>
               ) : (
                 <PieChart>
                   <Pie
                     data={data.typeBreakdown}
                     innerRadius={60}
                     outerRadius={100}
-                    paddingAngle={5}
+                    paddingAngle={8}
                     dataKey="days"
-                    nameKey="_id"
+                    nameKey="type_name"
+                    stroke="none"
                   >
                     {data.typeBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                      <Cell key={`cell-${index}`} fill={entry.color || '#c9a84c'} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ background: '#1A1814', border: '1px solid #2A2418', borderRadius: '8px', fontSize: '12px' }}
-                    itemStyle={{ color: '#F5F0E8' }}
+                  <Tooltip
+                    contentStyle={{ background: '#141209', border: '1px solid #c9a84c30', borderRadius: '10px', fontSize: '12px', color: '#f5f0e8' }}
                   />
                 </PieChart>
               )}
@@ -199,22 +173,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Tables Section */}
-      <div className="card overflow-hidden">
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <h3 className="text-sm font-bold text-ink-primary uppercase tracking-widest">
+      {/* Latest Requests Table Section */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', padding: '0 4px' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#f5f0e8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
             {isAdmin ? 'Latest Pending Requests' : 'Recent Leave Requests'}
           </h3>
-          <Link 
-            to={isAdmin ? "/admin/approvals" : "/my-leaves"} 
-            className="text-gold text-xs font-bold uppercase tracking-widest flex items-center gap-1 hover:underline"
+          <Link
+            to={isAdmin ? "/admin/approvals" : "/my-leaves"}
+            style={{ fontSize: '10px', fontWeight: 700, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.12em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#f0c060'}
+            onMouseLeave={e => e.currentTarget.style.color = '#c9a84c'}
           >
-            View All <ArrowUpRight size={14} />
+            View All <ChevronRight size={14} />
           </Link>
         </div>
-        <div className="p-0">
-          <LeaveTable 
-            leaves={isAdmin ? data.latestPending : data.recentRequests} 
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <LeaveTable
+            leaves={isAdmin ? data.latestPending : data.recentRequests}
             showEmployee={isAdmin}
           />
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { formatDate } from '../utils/dateFormat';
@@ -98,8 +98,9 @@ export default function LeaveTable({
             </tr>
           ) : (
             sorted.map((leave) => (
-              <>
-                <tr key={leave._id} style={{ cursor: expandRejection && leave.status === 'Rejected' ? 'pointer' : 'default' }}
+              <React.Fragment key={leave._id}>
+                <tr
+                  style={{ cursor: expandRejection && leave.status === 'Rejected' ? 'pointer' : 'default' }}
                   onClick={() => {
                     if (expandRejection && leave.status === 'Rejected') {
                       setExpanded(prev => ({ ...prev, [leave._id]: !prev[leave._id] }));
@@ -108,16 +109,16 @@ export default function LeaveTable({
                   {showEmployee && (
                     <td>
                       <div style={{ fontWeight: 500 }}>{leave.employee_snapshot?.name}</div>
-                      <div style={{ fontSize: '12px', color: '#9A9080' }}>{leave.employee_snapshot?.department}</div>
+                      <div style={{ fontSize: '12px', color: '#9a9080' }}>{leave.employee_snapshot?.department}</div>
                     </td>
                   )}
                   <td>
                     <span style={{
                       display: 'inline-block',
-                      padding: '3px 8px', borderRadius: '6px',
+                      padding: '3px 9px', borderRadius: '6px',
                       fontSize: '12px', fontWeight: 500,
-                      background: `${leave.leave_type?.color}20`,
-                      color: leave.leave_type?.color || '#C9A84C',
+                      background: `${leave.leave_type?.color}18`,
+                      color: leave.leave_type?.color || '#c9a84c',
                       border: `1px solid ${leave.leave_type?.color}30`,
                     }}>
                       {leave.leave_type?.type_name}
@@ -125,16 +126,16 @@ export default function LeaveTable({
                   </td>
                   <td>
                     <div style={{ fontSize: '13px' }}>{formatDate(leave.start_date)}</div>
-                    <div style={{ fontSize: '12px', color: '#9A9080' }}>→ {formatDate(leave.end_date)}</div>
+                    <div style={{ fontSize: '12px', color: '#9a9080' }}>→ {formatDate(leave.end_date)}</div>
                     {leave.is_half_day && (
-                      <span style={{ fontSize: '10px', color: '#C9A84C', fontWeight: 500 }}>Half Day</span>
+                      <span style={{ fontSize: '10px', color: '#c9a84c', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Half Day</span>
                     )}
                   </td>
-                  <td style={{ fontWeight: 600, color: '#C9A84C', fontSize: '15px' }}>
+                  <td style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, color: '#c9a84c', fontSize: '18px' }}>
                     {leave.working_days}
                   </td>
                   <td><StatusBadge status={leave.status} /></td>
-                  <td style={{ fontSize: '13px', color: '#9A9080' }}>{formatDate(leave.applied_on)}</td>
+                  <td style={{ fontSize: '13px', color: '#9a9080' }}>{formatDate(leave.applied_on)}</td>
                   {actions && (
                     <td onClick={(e) => e.stopPropagation()}>
                       {actions(leave)}
@@ -143,20 +144,20 @@ export default function LeaveTable({
                 </tr>
                 {expandRejection && leave.status === 'Rejected' && expanded[leave._id] && (
                   <tr key={`${leave._id}-expanded`}>
-                    <td colSpan={showEmployee ? 7 : 6} style={{ padding: '0 16px 14px', background: 'rgba(228, 184, 77, 0.03)' }}>
+                    <td colSpan={showEmployee ? 7 : 6} style={{ padding: '0 18px 14px', background: 'rgba(228,184,77,0.02)' }}>
                       <div style={{
                         padding: '10px 14px', borderRadius: '8px',
-                        background: 'rgba(228, 184, 77, 0.06)',
-                        border: '1px solid rgba(228, 184, 77, 0.15)',
-                        fontSize: '13px', color: '#E4B84D',
+                        background: 'rgba(228,184,77,0.06)',
+                        border: '1px solid rgba(228,184,77,0.15)',
+                        fontSize: '13px', color: '#e4b84d',
                       }}>
-                        <span style={{ color: '#9A9080', marginRight: '8px' }}>Rejection reason:</span>
+                        <span style={{ color: '#9a9080', marginRight: '8px' }}>Rejection reason:</span>
                         {leave.rejection_reason || 'No reason provided'}
                       </div>
                     </td>
                   </tr>
                 )}
-              </>
+              </React.Fragment>
             ))
           )}
         </tbody>
