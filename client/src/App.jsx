@@ -1,9 +1,10 @@
-import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAppStore } from './store/useAppStore';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Toast from './components/Toast';
+import ChatWidget from './components/ChatWidget';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import Login from './pages/Login';
@@ -61,11 +62,14 @@ const Layout = ({ children }) => {
           position: 'relative',
         }}
       >
-        <div key={location.pathname} className="fade-in">
-          {children}
-        </div>
+        <ErrorBoundary key={location.pathname}>
+          <div key={location.pathname} className="fade-in">
+            {children}
+          </div>
+        </ErrorBoundary>
       </main>
       <Toast />
+      <ChatWidget />
     </div>
   );
 };

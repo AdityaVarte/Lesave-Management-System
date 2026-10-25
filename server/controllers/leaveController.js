@@ -3,18 +3,7 @@ const LeaveRequest = require('../models/LeaveRequest');
 const Employee = require('../models/Employee');
 const LeaveType = require('../models/LeaveType');
 
-// Helper: calculate working days client-side (mirrors pre-save hook)
-const calcWorkingDays = (start, end, isHalfDay) => {
-  let count = 0;
-  const current = new Date(start);
-  const endDate = new Date(end);
-  while (current <= endDate) {
-    const day = current.getDay();
-    if (day !== 0 && day !== 6) count++;
-    current.setDate(current.getDate() + 1);
-  }
-  return isHalfDay ? Math.max(count * 0.5, 0.5) : count;
-};
+const { calcWorkingDays } = require('../utils/workingDays');
 
 // GET /api/leaves
 const getLeaves = async (req, res, next) => {

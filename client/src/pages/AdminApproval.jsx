@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   CheckCircle2, XCircle, AlertCircle, Loader2, MessageSquare
 } from 'lucide-react';
@@ -16,21 +16,26 @@ export default function AdminApproval() {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const { addToast, fetchPendingCount } = useAppStore();
+  const { addToast, refreshKey, setPendingCount, fetchPendingCount } = useAppStore();
 
-  const fetchPending = async () => {
+  const fetchPending = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getAdminDashboard();
-      setLeaves(response.data.latestPending);
+      const list = response?.data?.latestPending || [];
+      setLeaves(list);
+      setPendingCount(response?.data?.pendingCount ?? list.length);
     } catch {
       addToast('Failed to load pending requests', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast, setPendingCount]);
 
-  useEffect(() => { fetchPending(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous data fetch on mount and refreshKey update
+    fetchPending();
+  }, [fetchPending, refreshKey]);
 
   const handleAction = async () => {
     if (actionType === 'reject' && !reason.trim()) {

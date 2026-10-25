@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  Users, UserPlus, Search, Building2, ShieldCheck, Pencil, Trash2, Loader2, Mail
+  UserPlus, Search, Building2, ShieldCheck, Pencil, Trash2, Loader2, Mail
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,19 +42,22 @@ export default function Employees() {
     defaultValues: { role: 'employee', total_leaves: 20 }
   });
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     setLoading(true);
     try {
       const r = await getAllEmployees();
-      setEmployees(r.data);
+      setEmployees(r?.data || []);
     } catch {
       addToast('Failed to load employees', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  useEffect(() => { fetchEmployees(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous employees list fetch on component mount
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   const openPanel = (emp = null) => {
     setEditingEmp(emp);

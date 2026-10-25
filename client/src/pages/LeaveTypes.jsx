@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  Plus, Settings2, Pencil, Trash2, ShieldCheck, Clock, Calendar, CheckCircle2, ChevronRight
+  Plus, Pencil, Trash2, ShieldCheck, Clock
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { getLeaveTypes, createLeaveType, updateLeaveType, deleteLeaveType } from '../api/leaveTypeApi';
@@ -22,19 +22,22 @@ export default function LeaveTypes() {
 
   const { addToast } = useAppStore();
 
-  const fetchTypes = async () => {
+  const fetchTypes = useCallback(async () => {
     setLoading(true);
     try {
       const r = await getLeaveTypes();
-      setTypes(r.data);
+      setTypes(r?.data || []);
     } catch {
       addToast('Failed to load leave policies', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  useEffect(() => { fetchTypes(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous leave policies fetch on component mount
+    fetchTypes();
+  }, [fetchTypes]);
 
   const openPanel = (type = null) => {
     setEditingType(type);

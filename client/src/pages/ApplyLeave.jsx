@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,7 +40,7 @@ export default function ApplyLeave() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { is_half_day: false, start_date: todayInputDate(), end_date: todayInputDate() },
   });
@@ -57,7 +57,7 @@ export default function ApplyLeave() {
       setInitialLoading(false);
     };
     init();
-  }, [isAdmin]);
+  }, [isAdmin, addToast]);
 
   const onSubmit = async (data) => {
     setLoading(true);

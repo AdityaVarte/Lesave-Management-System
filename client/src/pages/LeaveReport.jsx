@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Download, XCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -21,19 +21,22 @@ export default function LeaveReport() {
   const { user, addToast } = useAppStore();
   const isAdmin = user.role === 'admin';
 
-  const fetchLeaves = async () => {
+  const fetchLeaves = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getLeaves({ ...filters, page, limit: 10 });
-      setData(response.data);
+      setData(response?.data || { leaves: [], total: 0, totalPages: 1 });
     } catch {
       addToast('Failed to load report data', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, page, addToast]);
 
-  useEffect(() => { fetchLeaves(); }, [page, filters]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous leave report data fetch on page/filters change
+    fetchLeaves();
+  }, [fetchLeaves]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;

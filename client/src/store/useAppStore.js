@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export const useAppStore = create((set, get) => ({
+export const useAppStore = create((set) => ({
   // ─── Auth ─────────────────────────────────────────────────────────────────
   user: JSON.parse(localStorage.getItem('lf_user') || 'null'),
   token: localStorage.getItem('lf_token') || null,
@@ -15,8 +15,38 @@ export const useAppStore = create((set, get) => ({
   logout: () => {
     localStorage.removeItem('lf_token');
     localStorage.removeItem('lf_user');
-    set({ token: null, user: null, isAuthenticated: false });
+    set({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      chatIsOpen: false,
+      chatMessages: [],
+      chatPendingAction: null,
+      chatIsLoading: false,
+    });
   },
+
+  // ─── Chatbot State ────────────────────────────────────────────────────────
+  chatIsOpen: false,
+  chatMessages: [],
+  chatIsLoading: false,
+  chatPendingAction: null,
+
+  setChatIsOpen: (open) => set({ chatIsOpen: open }),
+  setChatMessages: (msgs) =>
+    set((state) => ({
+      chatMessages: typeof msgs === 'function' ? msgs(state.chatMessages) : msgs,
+    })),
+  addChatMessage: (msg) =>
+    set((state) => ({
+      chatMessages: [
+        ...state.chatMessages,
+        { ...msg, id: Date.now() + Math.random() },
+      ],
+    })),
+  setChatIsLoading: (loading) => set({ chatIsLoading: loading }),
+  setChatPendingAction: (action) => set({ chatPendingAction: action }),
+  clearChat: () => set({ chatMessages: [], chatPendingAction: null }),
 
   // ─── Toasts ───────────────────────────────────────────────────────────────
   toasts: [],
@@ -36,4 +66,8 @@ export const useAppStore = create((set, get) => ({
   // ─── Pending Count (for sidebar badge) ───────────────────────────────────
   pendingCount: 0,
   setPendingCount: (count) => set({ pendingCount: count }),
+
+  // ─── Global Refresh Trigger for Tables / Dashboard ───────────────────────
+  refreshKey: 0,
+  triggerRefresh: () => set((state) => ({ refreshKey: state.refreshKey + 1 })),
 }));

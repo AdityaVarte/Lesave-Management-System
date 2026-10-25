@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -97,7 +97,7 @@ export default function Sidebar() {
   const handleLogout = () => { logout(); navigate('/login'); };
   const isAdmin = user?.role === 'admin';
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <aside style={{
       width: '240px',
       background: '#0e0d0a',
@@ -209,7 +209,7 @@ export default function Sidebar() {
     <>
       {/* Desktop fixed sidebar */}
       <div className="lg:block hidden" style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: '240px', zIndex: 60 }}>
-        <SidebarContent />
+        {renderSidebarContent()}
       </div>
 
       {/* Mobile header bar */}
@@ -243,7 +243,7 @@ export default function Sidebar() {
           transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
         }}
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </div>
     </>
   );

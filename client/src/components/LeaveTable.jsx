@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { formatDate } from '../utils/dateFormat';
@@ -15,12 +15,16 @@ function SkeletonRow({ cols }) {
   );
 }
 
+function SortIcon({ col, sortKey, sortDir }) {
+  if (sortKey !== col) return <ChevronUp size={12} color="#5A5248" />;
+  return sortDir === 'asc'
+    ? <ChevronUp size={12} color="#C9A84C" />
+    : <ChevronDown size={12} color="#C9A84C" />;
+}
+
 export default function LeaveTable({
   leaves = [],
   loading = false,
-  onApprove,
-  onReject,
-  onCancel,
   showEmployee = true,
   expandRejection = false,
   actions,
@@ -44,13 +48,6 @@ export default function LeaveTable({
     return 0;
   });
 
-  const SortIcon = ({ col }) => {
-    if (sortKey !== col) return <ChevronUp size={12} color="#5A5248" />;
-    return sortDir === 'asc'
-      ? <ChevronUp size={12} color="#C9A84C" />
-      : <ChevronDown size={12} color="#C9A84C" />;
-  };
-
   const headerStyle = {
     cursor: 'pointer', userSelect: 'none',
     display: 'flex', alignItems: 'center', gap: '4px',
@@ -63,21 +60,21 @@ export default function LeaveTable({
           <tr>
             {showEmployee && (
               <th><div style={headerStyle} onClick={() => toggleSort('employee_snapshot.name')}>
-                Employee <SortIcon col="employee_snapshot.name" />
+                Employee <SortIcon col="employee_snapshot.name" sortKey={sortKey} sortDir={sortDir} />
               </div></th>
             )}
             <th><div style={headerStyle} onClick={() => toggleSort('leave_type.type_name')}>
-              Type <SortIcon col="leave_type.type_name" />
+              Type <SortIcon col="leave_type.type_name" sortKey={sortKey} sortDir={sortDir} />
             </div></th>
             <th><div style={headerStyle} onClick={() => toggleSort('start_date')}>
-              Dates <SortIcon col="start_date" />
+              Dates <SortIcon col="start_date" sortKey={sortKey} sortDir={sortDir} />
             </div></th>
             <th>Days</th>
             <th><div style={headerStyle} onClick={() => toggleSort('status')}>
-              Status <SortIcon col="status" />
+              Status <SortIcon col="status" sortKey={sortKey} sortDir={sortDir} />
             </div></th>
             <th><div style={headerStyle} onClick={() => toggleSort('applied_on')}>
-              Applied <SortIcon col="applied_on" />
+              Applied <SortIcon col="applied_on" sortKey={sortKey} sortDir={sortDir} />
             </div></th>
             {actions && <th>Actions</th>}
           </tr>
@@ -98,7 +95,7 @@ export default function LeaveTable({
             </tr>
           ) : (
             sorted.map((leave) => (
-              <React.Fragment key={leave._id}>
+              <Fragment key={leave._id}>
                 <tr
                   style={{ cursor: expandRejection && leave.status === 'Rejected' ? 'pointer' : 'default' }}
                   onClick={() => {
@@ -157,7 +154,7 @@ export default function LeaveTable({
                     </td>
                   </tr>
                 )}
-              </React.Fragment>
+              </Fragment>
             ))
           )}
         </tbody>

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  Users, Clock, CheckCircle2, BarChart3, Calendar, ArrowUpRight, TrendingUp, PieChart as PieIcon, ChevronRight
+  Users, Clock, CheckCircle2, BarChart3, Calendar, TrendingUp, PieChart as PieIcon, ChevronRight, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
@@ -24,30 +24,107 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
-  const { user, addToast } = useAppStore();
+  const { user, addToast, refreshKey } = useAppStore();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = user.role === 'admin'
+        ? await getAdminDashboard()
+        : await getDashboard();
+      setData(response.data);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to load dashboard data';
+      setError(msg);
+      addToast(msg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [user.role, addToast]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = user.role === 'admin'
-          ? await getAdminDashboard()
-          : await getDashboard();
-        setData(response.data);
-      } catch (err) {
-        addToast('Failed to load dashboard data', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous dashboard metrics fetch on mount and role/refreshKey change
     fetchData();
-  }, [user.role]);
+  }, [fetchData, refreshKey]);
 
   if (loading) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <div className="animate-spin" style={{ width: '40px', height: '40px', border: '3px solid rgba(201,168,76,0.1)', borderTopColor: '#c9a84c', borderRadius: '50%' }} />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="fade-in" style={{ padding: '36px' }}>
+        <div
+          style={{
+            maxWidth: '520px',
+            margin: '60px auto',
+            background: '#141209',
+            border: '1px solid #2e2716',
+            borderRadius: '16px',
+            padding: '36px',
+            textAlign: 'center',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+          }}
+        >
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: 'rgba(224, 112, 112, 0.12)',
+              border: '1px solid rgba(224, 112, 112, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              color: '#e07070',
+            }}
+          >
+            <AlertTriangle size={22} />
+          </div>
+          <h3
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: '24px',
+              color: '#f5f0e8',
+              marginBottom: '8px',
+            }}
+          >
+            Unable to Load Dashboard
+          </h3>
+          <p
+            style={{
+              fontSize: '13px',
+              color: '#9a9080',
+              lineHeight: 1.6,
+              marginBottom: '24px',
+            }}
+          >
+            {error || 'Unable to connect to the backend server. Please verify the server is running and retry.'}
+          </p>
+          <button
+            onClick={fetchData}
+            className="btn-gold"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 24px',
+              cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={15} />
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -75,27 +152,27 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         {isAdmin ? (
           <>
-            <MetricCard title="Total Employees" value={data.totalEmployees} icon={Users} color="#C9A84C" />
+            <MetricCard title="Total Employees" value={data?.totalEmployees ?? 0} icon={Users} color="#C9A84C" />
             <MetricCard
               title="Pending Approvals"
-              value={data.pendingCount}
+              value={data?.pendingCount ?? 0}
               icon={Clock}
-              color={data.pendingCount > 0 ? '#E4B84D' : '#9A9080'}
-              glowColor={data.pendingCount > 0 ? 'rgba(228, 184, 77, 0.2)' : undefined}
+              color={(data?.pendingCount ?? 0) > 0 ? '#E4B84D' : '#9A9080'}
+              glowColor={(data?.pendingCount ?? 0) > 0 ? 'rgba(228, 184, 77, 0.2)' : undefined}
             />
-            <MetricCard title="Approved This Month" value={data.approvedThisMonth} icon={CheckCircle2} color="#5CBF8A" />
-            <MetricCard title="Avg Balance" value={`${data.avgBalance}d`} icon={BarChart3} color="#F0C060" />
+            <MetricCard title="Approved This Month" value={data?.approvedThisMonth ?? 0} icon={CheckCircle2} color="#5CBF8A" />
+            <MetricCard title="Avg Balance" value={`${data?.avgBalance ?? 0}d`} icon={BarChart3} color="#F0C060" />
           </>
         ) : (
           <>
-            <MetricCard title="Total Allocated" value={`${data.balance.total}d`} icon={Calendar} color="#9A9080" />
-            <MetricCard title="Used Leaves" value={`${data.balance.used}d`} icon={CheckCircle2} color="#5CBF8A" />
-            <MetricCard title="Pending" value={`${data.balance.pending}d`} icon={Clock} color="#E4B84D" />
+            <MetricCard title="Total Allocated" value={`${data?.balance?.total ?? 0}d`} icon={Calendar} color="#9A9080" />
+            <MetricCard title="Used Leaves" value={`${data?.balance?.used ?? 0}d`} icon={CheckCircle2} color="#5CBF8A" />
+            <MetricCard title="Pending" value={`${data?.balance?.pending ?? 0}d`} icon={Clock} color="#E4B84D" />
             <MetricCard
               title="Remaining"
-              value={`${data.balance.remaining}d`}
+              value={`${data?.balance?.remaining ?? 0}d`}
               icon={TrendingUp}
-              color={data.balance.remaining < 2 ? '#E06060' : data.balance.remaining < 5 ? '#E4B84D' : '#5CBF8A'}
+              color={(data?.balance?.remaining ?? 0) < 2 ? '#E06060' : (data?.balance?.remaining ?? 0) < 5 ? '#E4B84D' : '#5CBF8A'}
             />
           </>
         )}
@@ -113,7 +190,7 @@ export default function Dashboard() {
           </div>
           <div style={{ height: '300px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={isAdmin ? data.departmentStats : data.typeBreakdown}>
+              <BarChart data={isAdmin ? (data?.departmentStats || []) : (data?.typeBreakdown || [])}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#231e12" vertical={false} />
                 <XAxis dataKey={isAdmin ? "_id" : "type_name"} stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} dy={10} />
                 <YAxis stroke="#5a5248" fontSize={10} tickLine={false} axisLine={false} />
@@ -135,7 +212,7 @@ export default function Dashboard() {
           <div style={{ height: '300px' }}>
             <ResponsiveContainer width="100%" height="100%">
               {isAdmin ? (
-                <AreaChart data={data.monthlyStats}>
+                <AreaChart data={data?.monthlyStats || []}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#c9a84c" stopOpacity={0.3} />
@@ -151,7 +228,7 @@ export default function Dashboard() {
               ) : (
                 <PieChart>
                   <Pie
-                    data={data.typeBreakdown}
+                    data={data?.typeBreakdown || []}
                     innerRadius={60}
                     outerRadius={100}
                     paddingAngle={8}
@@ -159,7 +236,7 @@ export default function Dashboard() {
                     nameKey="type_name"
                     stroke="none"
                   >
-                    {data.typeBreakdown.map((entry, index) => (
+                    {(data?.typeBreakdown || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color || '#c9a84c'} />
                     ))}
                   </Pie>
@@ -190,7 +267,7 @@ export default function Dashboard() {
         </div>
         <div className="card" style={{ overflow: 'hidden' }}>
           <LeaveTable
-            leaves={isAdmin ? data.latestPending : data.recentRequests}
+            leaves={isAdmin ? (data?.latestPending || []) : (data?.recentRequests || [])}
             showEmployee={isAdmin}
           />
         </div>

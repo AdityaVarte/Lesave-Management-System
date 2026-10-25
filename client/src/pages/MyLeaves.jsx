@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ClipboardList, Trash2, CalendarPlus, RefreshCw
@@ -12,22 +12,25 @@ export default function MyLeaves() {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelId, setCancelId] = useState(null);
-  const { addToast } = useAppStore();
+  const { addToast, refreshKey } = useAppStore();
   const navigate = useNavigate();
 
-  const fetchMyLeaves = async () => {
+  const fetchMyLeaves = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getLeaves();
-      setLeaves(response.data.leaves);
+      setLeaves(response?.data?.leaves || []);
     } catch {
       addToast('Failed to load leave history', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  useEffect(() => { fetchMyLeaves(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Asynchronous personal leave history fetch on mount and refreshKey update
+    fetchMyLeaves();
+  }, [fetchMyLeaves, refreshKey]);
 
   const handleCancel = async () => {
     try {
